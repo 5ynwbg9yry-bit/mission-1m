@@ -29,6 +29,7 @@ h1{font-size:20px;font-weight:600;margin:0;letter-spacing:-.01em}
 .pos{color:var(--green);background:var(--gbg)}.neg{color:var(--red);background:var(--rbg)}
 .up{color:var(--green)}.dn{color:var(--red)}
 .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:18px}
+@media(max-width:520px){#pos th:nth-child(4),#pos td:nth-child(4),#holds th:nth-child(3),#holds td:nth-child(3){display:none}table{font-size:13px}td,th{padding-left:6px;padding-right:6px}}
 @media(max-width:640px){.grid{grid-template-columns:repeat(2,1fr)}.hero .total{font-size:40px}}
 .kv .k{font-size:12px;color:var(--dim)}.kv .v{font-size:17px;font-weight:600;font-variant-numeric:tabular-nums;transition:color .6s}
 .prog{margin-top:20px}
@@ -254,7 +255,8 @@ function chart(current){
   $("chartLo").textContent=f(t0)+" ET";$("chartHi").textContent="now · range "+usd(lo+pad)+" – "+usd(hi-pad);
 }
 function renderData(){
-  const s=D.status||{};const acts=D.activity||[];const a0=acts[0]||{};
+  const s=D.status||{};const acts=D.activity||[];
+  const a0=acts.find(a=>["trade","exit","approved","proposal","watch","analysis","candidate"].includes(a.type))||acts[0]||{};
   $("phase").textContent=(s.phase||"").replace("->","→");
   $("fNow").textContent=s.current_focus||a0.title||"—";
   $("fWhy").textContent=s.current_why||a0.why||"—";
