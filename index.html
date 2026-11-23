@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Mission $10 → $1M</title>
+<meta name="theme-color" content="#f6f6f4">
+<meta name="robots" content="noindex">
+<style>
+:root{--bg:#f6f6f4;--card:#fff;--line:#e7e6e1;--txt:#1d1d1b;--dim:#76746d;--faint:#a3a19a;--green:#1f8a4c;--red:#c2410c;--accent:#2f5bd3;--gbg:#e8f5ec;--rbg:#fbeee6}
+@media(prefers-color-scheme:dark){:root{--bg:#141413;--card:#1c1c1a;--line:#2c2b28;--txt:#ecebe6;--dim:#9c9a92;--faint:#6f6d66;--green:#4ade80;--red:#fb923c;--accent:#7aa2ff;--gbg:#173322;--rbg:#3a2316}}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:980px;margin:0 auto;padding:28px 18px 60px}
+header{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+h1{font-size:20px;font-weight:600;margin:0;letter-spacing:-.01em}
+.live{font-size:13px;color:var(--dim);display:flex;align-items:center;gap:8px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--green);position:relative;flex:none}
+.dot:after{content:"";position:absolute;inset:0;border-radius:50%;background:var(--green);animation:ping 2s ease-out infinite}
+.dot.stale{background:var(--faint)}.dot.stale:after{display:none}
+@keyframes ping{0%{transform:scale(1);opacity:.6}100%{transform:scale(2.6);opacity:0}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:14px}
+.card h2{font-size:13px;font-weight:600;color:var(--dim);margin:0 0 12px;text-transform:uppercase;letter-spacing:.06em;display:flex;justify-content:space-between;gap:8px}
+.card h2 span{font-weight:400;text-transform:none;letter-spacing:0;color:var(--faint)}
+.hero .total{font-size:48px;font-weight:650;letter-spacing:-.02em;line-height:1.1;font-variant-numeric:tabular-nums;transition:color .6s}
+.flash-up{color:var(--green)!important}.flash-dn{color:var(--red)!important}
+.chg{margin-top:6px;font-size:15px;font-variant-numeric:tabular-nums}
+.pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:13px;font-weight:500}
+.pos{color:var(--green);background:var(--gbg)}.neg{color:var(--red);background:var(--rbg)}
+.up{color:var(--green)}.dn{color:var(--red)}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:18px}
+@media(max-width:640px){.grid{grid-template-columns:repeat(2,1fr)}.hero .total{font-size:40px}}
+.kv .k{font-size:12px;color:var(--dim)}.kv .v{font-size:17px;font-weight:600;font-variant-numeric:tabular-nums;transition:color .6s}
+.prog{margin-top:20px}
+.bar{height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--accent);border-radius:99px;transition:width 1s ease}
+.ticks{display:flex;justify-content:space-between;font-size:11px;color:var(--faint);margin-top:6px}
+.ticks b{font-weight:600;color:var(--txt)}
+.focus{display:grid;grid-template-columns:110px 1fr;gap:10px 14px;font-size:15px}
+.focus .k{color:var(--dim);font-size:13px;padding-top:1px}
+@media(max-width:520px){.focus{grid-template-columns:1fr;gap:2px}.focus .v{margin-bottom:10px}}
+table{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
+th{text-align:left;font-weight:500;color:var(--dim);font-size:12px;padding:0 8px 8px;border-bottom:1px solid var(--line)}
+td{padding:10px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+th.r,td.r{text-align:right}
+.scroll{overflow-x:auto;margin:0 -8px}
+a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+.sub{font-size:12px;color:var(--faint)}
+svg{display:block;width:100%;height:auto}
+.feed .it{padding:12px 0;border-bottom:1px solid var(--line)}
+.feed .it:last-child{border-bottom:0}
+.feed .h{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.feed .t{font-weight:600;flex:1;min-width:200px}
+.feed .tm{font-size:12px;color:var(--faint);white-space:nowrap}
+.tag{font-size:11px;padding:1px 7px;border-radius:999px;background:var(--line);color:var(--dim);font-weight:500}
+.tag.trade,.tag.approved{background:var(--gbg);color:var(--green)}
+.tag.rejected,.tag.exit{background:var(--rbg);color:var(--red)}
+.feed .d{font-size:14px;color:var(--dim);margin-top:4px}
+.feed .d b{font-weight:500;color:var(--txt)}
+.feed .it.new{animation:fadein .8s ease}
+@keyframes fadein{from{background:var(--gbg)}to{background:transparent}}
+.more{background:none;border:1px solid var(--line);border-radius:8px;padding:7px 12px;color:var(--txt);font:inherit;font-size:13px;cursor:pointer;margin-top:10px}
+footer{font-size:12px;color:var(--faint);text-align:center;margin-top:24px;line-height:1.8}
+.chartmeta{display:flex;justify-content:space-between;font-size:12px;color:var(--faint);margin-top:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Mission $10 → $1M</h1>
+    <div class="live"><span class="dot" id="dot"></span><span id="liveTxt">Connecting…</span></div>
+  </header>
+
+  <section class="card hero">
+    <h2>Total portfolio value <span id="phase"></span></h2>
+    <div class="total" id="total">—</div>
+    <div class="chg"><span class="pill" id="chgPill">—</span> <span id="chgTxt" class="sub">since the $10 start</span></div>
+    <div class="grid">
+      <div class="kv"><div class="k">Deposited</div><div class="v" id="dep">$11.55</div></div>
+      <div class="kv"><div class="k">Open P/L</div><div class="v" id="openPl">—</div></div>
+      <div class="kv"><div class="k">Next milestone</div><div class="v" id="nextM">—</div></div>
+      <div class="kv"><div class="k">Needed to $1M</div><div class="v" id="need">—</div></div>
+    </div>
+    <div class="prog">
+      <div class="ticks" style="margin:0 0 6px"><span>Progress to $1M</span><span><b id="progPct">—</b> (log scale: each 10x is 20%)</span></div>
+      <div class="bar"><i id="progBar"></i></div>
+      <div class="ticks"><span>$10</span><span>$100</span><span>$1K</span><span>$10K</span><span>$100K</span><span>$1M</span></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>What I'm doing <span id="statusAge"></span></h2>
+    <div class="focus">
+      <div class="k">Now</div><div class="v" id="fNow">—</div>
+      <div class="k">Why</div><div class="v" id="fWhy">—</div>
+      <div class="k">What I expect</div><div class="v" id="fExp">—</div>
+      <div class="k">Next</div><div class="v" id="fNext">—</div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Net worth <span id="chartRange"></span></h2>
+    <div id="chart"></div>
+    <div class="chartmeta"><span id="chartLo"></span><span id="chartHi"></span></div>
+  </section>
+
+  <section class="card">
+    <h2>Holdings <span id="holdAge"></span></h2>
+    <div class="scroll"><table id="holds"><thead><tr><th>Token</th><th class="r">Amount</th><th class="r">Price</th><th class="r">Value</th><th class="r">Share</th></tr></thead><tbody></tbody></table></div>
+  </section>
+
+  <section class="card" id="posCard" hidden>
+    <h2>Open positions</h2>
+    <div class="scroll"><table id="pos"><thead><tr><th>Token</th><th class="r">Entry</th><th class="r">Now</th><th class="r">Value</th><th class="r">P/L</th><th class="r">Stop</th></tr></thead><tbody></tbody></table></div>
+  </section>
+
+  <section class="card">
+    <h2>Latest activity <span id="actCount"></span></h2>
+    <div class="feed" id="feed"></div>
+    <button class="more" id="moreBtn" hidden>Show more</button>
+  </section>
+
+  <section class="card">
+    <h2>Recent trades</h2>
+    <div class="scroll"><table id="trades"><thead><tr><th>Time</th><th>Swap</th><th>Status</th><th class="r">Receipt</th></tr></thead><tbody></tbody></table></div>
+  </section>
+
+  <footer>
+    Wallet <a id="walletLink" target="_blank" rel="noopener"></a> · <a id="planLink" target="_blank" rel="noopener">Battle plan</a><br>
+    Balances read directly from Solana and prices from Jupiter, refreshed every few seconds in your browser.<br>
+    Reasoning and trades published from the trading box. <span id="pubInfo"></span>
+  </footer>
+</div>
+
+<script>
+"use strict";
+const GIST_ID="66ea403f3f83e94518df2eb00b6d7ddb", GIST_USER="5ynwbg9yry-bit";
+const ADDRESS="J4dvbhAdWNVEc7R7P3spD8YWKs3GjZ2fgMrhvB9EPSe8";
+const RPCS=["https://solana-rpc.publicnode.com","https://api.mainnet-beta.solana.com"];
+const SOL="So11111111111111111111111111111111111111112", USDC="EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
+const TZ="America/Louisville", BAL_MS=8000, DATA_MS=20000;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const usd=n=>n==null||!isFinite(n)?"—":"$"+Number(n).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+const sgnUsd=n=>n==null?"—":(n>=0?"+":"−")+usd(Math.abs(n));
+const px=n=>n==null||!isFinite(n)?"—":(n<0.01?Number(n).toPrecision(4):"$"+Number(n).toLocaleString("en-US",{maximumFractionDigits:n<1?4:2}));
+const amt=n=>Number(n).toLocaleString("en-US",{maximumFractionDigits:n<1?6:2});
+const short=n=>n>=1e6?"$"+n/1e6+"M":n>=1e3?"$"+n/1e3+"K":"$"+n;
+const ago=ms=>{if(!ms)return "—";const s=Math.max(0,Math.round((Date.now()-ms)/1000));return s<60?s+"s ago":s<3600?Math.round(s/60)+"m ago":Math.round(s/3600)+"h ago"};
+const fmtTime=ts=>{const d=new Date(ts);return isNaN(d)?esc(ts):d.toLocaleString("en-US",{timeZone:TZ,month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})+" ET"};
+const TAG={scan:"Scan",analysis:"Check",candidate:"Candidate",rejected:"Rejected",proposal:"Proposal",approved:"Approved",trade:"Trade",exit:"Exit",note:"Note",watch:"Watching"};
+
+let D=null, etag=null, lastData=0, lastBal=0, lastPrice=0, apiBlockedUntil=0;
+let bal={sol:null,tokens:{}}, prices={}, live=[], prevTotal=null, shown=10, seenAct=new Set(), firstFeed=true;
+try{live=JSON.parse(localStorage.getItem("m1m_live")||"[]").filter(p=>Date.now()/1000-p[0]<86400)}catch(e){}
+
+// ---------- published data (reasoning, positions, trades, history) ----------
+async function fetchData(){
+  let got=null;
+  if(Date.now()>apiBlockedUntil){
+    try{
+      const h={"Accept":"application/vnd.github+json"}; if(etag)h["If-None-Match"]=etag;
+      const r=await fetch(`https://api.github.com/gists/${GIST_ID}?t=${Math.floor(Date.now()/15000)}`,{headers:h,cache:"no-store"});
+      if(r.status===304){lastData=Date.now();return}
+      if(r.ok){etag=r.headers.get("ETag");const g=await r.json();const f=g.files["data.json"];
+        got=f.truncated?await (await fetch(f.raw_url,{cache:"no-store"})).json():JSON.parse(f.content)}
+      else if(r.status===403||r.status===429){const reset=+r.headers.get("X-RateLimit-Reset");apiBlockedUntil=reset?reset*1000:Date.now()+600000}
+    }catch(e){}
+  }
+  if(!got){try{const r=await fetch(`https://gist.githubusercontent.com/${GIST_USER}/${GIST_ID}/raw/data.json?cb=${Date.now()}`,{cache:"no-store"});if(r.ok)got=await r.json()}catch(e){}}
+  if(got&&(!D||(got.seq||0)>=(D.seq||0))){D=got;lastData=Date.now();renderData()}
+}
+
+// ---------- live balances + prices (browser, direct) ----------
+async function rpc(body){for(const u of RPCS){try{const r=await fetch(u,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)});const j=await r.json();if(j.result)return j.result}catch(e){}}return null}
+async function fetchBalances(){
+  const accts=(D&&D.token_accounts)||[];
+  const res=await rpc({jsonrpc:"2.0",id:1,method:"getMultipleAccounts",params:[[ADDRESS,...accts.map(a=>a.pubkey)],{encoding:"jsonParsed",commitment:"confirmed"}]});
+  if(!res)return false;
+  const v=res.value; bal.sol=(v[0]?.lamports||0)/1e9; const toks={};
+  accts.forEach((a,i)=>{const info=v[i+1]?.data?.parsed?.info;if(!info)return;const ui=+info.tokenAmount.uiAmountString;if(ui>0)toks[a.mint]={symbol:a.symbol,amount:ui}});
+  bal.tokens=toks;lastBal=Date.now();return true;
+}
+async function fetchPrices(){
+  const mints=[SOL,...Object.keys(bal.tokens)];const ids=[...new Set(mints)].join(",");let ok=false;
+  for(const base of ["https://lite-api.jup.ag/price/v3","https://api.jup.ag/price/v3"]){
+    try{const r=await fetch(`${base}?ids=${ids}`);if(!r.ok)continue;const j=await r.json();for(const m in j)if(j[m]?.usdPrice)prices[m]=j[m].usdPrice;ok=true;break}catch(e){}
+  }
+  const missing=mints.filter(m=>prices[m]==null);
+  if(!ok||missing.length){try{const r=await fetch(`https://api.dexscreener.com/tokens/v1/solana/${(ok?missing:mints).join(",")}`);const arr=await r.json();
+    const best={};for(const p of arr){const m=p.baseToken?.address;const liq=p.liquidity?.usd||0;if(m&&p.priceUsd&&(!best[m]||liq>best[m].l))best[m]={p:+p.priceUsd,l:liq}}
+    for(const m in best)prices[m]=best[m].p;ok=true}catch(e){}}
+  if(prices[USDC]==null)prices[USDC]=1;
+  if(ok)lastPrice=Date.now();return ok;
+}
+async function tick(){
+  if(!D)return;
+  await fetchBalances(); await fetchPrices();
+  renderLive();
+}
+
+// ---------- render ----------
+function holdings(){const H=[];
+  if(bal.sol!=null)H.push({sym:"SOL",mint:SOL,amount:bal.sol,price:prices[SOL],usd:prices[SOL]!=null?bal.sol*prices[SOL]:null});
+  for(const m in bal.tokens){const t=bal.tokens[m];const p=prices[m]??(D.box_prices||{})[m];H.push({sym:t.symbol,mint:m,amount:t.amount,price:p,usd:p!=null?t.amount*p:null})}
+  return H.sort((a,b)=>(b.usd||0)-(a.usd||0))}
+function flash(el,dir){el.classList.remove("flash-up","flash-dn");void el.offsetWidth;if(dir)el.classList.add(dir>0?"flash-up":"flash-dn");setTimeout(()=>el.classList.remove("flash-up","flash-dn"),900)}
+function renderLive(){
+  const H=holdings();if(!H.length||H.some(h=>h.usd==null&&h.amount>0&&h.sym!=="USDT"))return;
+  const total=H.reduce((a,h)=>a+(h.usd||0),0), start=D.start_usd||10;
+  const el=$("total");el.textContent=usd(total);if(prevTotal!=null&&Math.abs(total-prevTotal)>=0.005)flash(el,total-prevTotal);prevTotal=total;
+  const ch=total-start,pct=(total/start-1)*100;
+  $("chgPill").textContent=(pct>=0?"+":"")+pct.toFixed(2)+"%";$("chgPill").className="pill "+(pct>=0?"pos":"neg");
+  $("chgTxt").textContent=sgnUsd(ch)+" since the $10 start";
+  const lg=Math.max(0,Math.log10(total/10)/5*100);$("progPct").textContent=lg.toFixed(2)+"%";$("progBar").style.width=Math.max(.6,lg)+"%";
+  $("nextM").textContent=short([100,1e3,1e4,1e5,1e6].find(m=>m>total)||1e6);
+  $("need").textContent=Math.round(1e6/total).toLocaleString()+"x";
+  // holdings table
+  $("holds").tBodies[0].innerHTML=H.filter(h=>h.amount>0).map(h=>`<tr><td>${esc(h.sym)}</td><td class="r">${amt(h.amount)}</td><td class="r">${px(h.price)}</td><td class="r">${usd(h.usd)}</td><td class="r">${total?((h.usd||0)/total*100).toFixed(0):0}%</td></tr>`).join("");
+  // positions
+  const P=D.positions||[];let opl=0,has=false;
+  $("posCard").hidden=!P.length;
+  $("pos").tBodies[0].innerHTML=P.map(p=>{const now=prices[p.mint]??(D.box_prices||{})[p.mint];const qty=bal.tokens[p.mint]?.amount??p.qty;
+    const val=now!=null&&qty!=null?now*qty:null;const cost=p.cost_usd??(p.entry*p.qty);const pl=val!=null&&cost?val-cost:null;if(pl!=null){opl+=pl;has=true}
+    const plp=pl!=null?pl/cost*100:null;const dist=p.stop&&now?((now/p.stop-1)*100):null;
+    return `<tr><td><a href="https://dexscreener.com/solana/${encodeURIComponent(p.mint)}" target="_blank" rel="noopener">${esc(p.symbol)}</a>${p.tx?`<div class="sub"><a href="https://solscan.io/tx/${encodeURIComponent(p.tx)}" target="_blank" rel="noopener">entry tx</a></div>`:""}</td>
+    <td class="r">${px(p.entry)}</td><td class="r">${px(now)}</td><td class="r">${usd(val)}</td>
+    <td class="r ${pl==null?"":pl>=0?"up":"dn"}">${pl==null?"—":sgnUsd(pl)}<div class="sub">${plp==null?"":(plp>=0?"+":"")+plp.toFixed(1)+"%"}</div></td>
+    <td class="r">${px(p.stop)}<div class="sub">${dist==null?"":dist.toFixed(1)+"% away"}</div></td></tr>`}).join("");
+  const o=$("openPl");o.textContent=has?sgnUsd(opl):"—";o.className="v "+(has?(opl>=0?"up":"dn"):"");
+  // live chart points
+  const now=Math.floor(Date.now()/1000);if(!live.length||now-live[live.length-1][0]>=15){live.push([now,+total.toFixed(4)]);live=live.slice(-3000);try{localStorage.setItem("m1m_live",JSON.stringify(live))}catch(e){}}
+  else live[live.length-1]=[live[live.length-1][0],+total.toFixed(4)];
+  chart(total);
+}
+function chart(current){
+  const hist=(D.networth||[]);const lastHist=hist.length?hist[hist.length-1][0]:0;
+  let pts=hist.concat(live.filter(p=>p[0]>lastHist)).sort((a,b)=>a[0]-b[0]);
+  if(current!=null)pts.push([Date.now()/1000,current]);
+  if(pts.length<2){$("chart").innerHTML="";return}
+  const W=900,H=220,pl=8,pr=8,pt=12,pb=12;const t0=pts[0][0],t1=pts[pts.length-1][0];
+  let lo=Math.min(...pts.map(p=>p[1])),hi=Math.max(...pts.map(p=>p[1]));const pad=Math.max((hi-lo)*.12,.05);lo-=pad;hi+=pad;
+  const X=t=>pl+(t-t0)/((t1-t0)||1)*(W-pl-pr),Y=v=>pt+(1-(v-lo)/(hi-lo))*(H-pt-pb);
+  const d=pts.map((p,i)=>(i?"L":"M")+X(p[0]).toFixed(1)+" "+Y(p[1]).toFixed(1)).join(" ");
+  const up=pts[pts.length-1][1]>=pts[0][1];const col=getComputedStyle(document.documentElement).getPropertyValue(up?"--green":"--red").trim();
+  const lp=pts[pts.length-1];
+  const startY=(10>=lo&&10<=hi)?`<line x1="${pl}" x2="${W-pr}" y1="${Y(10)}" y2="${Y(10)}" stroke="currentColor" stroke-opacity=".25" stroke-dasharray="4 5"/>`:"";
+  $("chart").innerHTML=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="height:200px;color:var(--dim)">
+    <defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${col}" stop-opacity=".18"/><stop offset="1" stop-color="${col}" stop-opacity="0"/></linearGradient></defs>
+    ${startY}<path d="${d} L${X(t1)} ${H-pb} L${X(t0)} ${H-pb} Z" fill="url(#g)"/><path d="${d}" fill="none" stroke="${col}" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>
+    <circle cx="${X(lp[0])}" cy="${Y(lp[1])}" r="4" fill="${col}"/></svg>`;
+  const f=t=>new Date(t*1000).toLocaleString("en-US",{timeZone:TZ,month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});
+  $("chartLo").textContent=f(t0)+" ET";$("chartHi").textContent="now · range "+usd(lo+pad)+" – "+usd(hi-pad);
+}
+function renderData(){
+  const s=D.status||{};const acts=D.activity||[];const a0=acts[0]||{};
+  $("phase").textContent=(s.phase||"").replace("->","→");
+  $("fNow").textContent=s.current_focus||a0.title||"—";
+  $("fWhy").textContent=s.current_why||a0.why||"—";
+  $("fExp").textContent=s.current_expect||a0.expect||"—";
+  $("fNext").textContent=s.next_step||"—";
+  $("dep").textContent=usd(D.deposited_usd);
+  $("walletLink").textContent=D.address.slice(0,4)+"…"+D.address.slice(-4);$("walletLink").href="https://solscan.io/account/"+D.address;
+  $("planLink").href=D.plan_url;
+  renderFeed();
+  $("trades").tBodies[0].innerHTML=(D.trades||[]).map(t=>`<tr><td>${esc(t.time.replace(" EST"," ET").replace(/^\d{4}-/,""))}</td><td>${esc(t.in)} → ${esc(t.out)}</td><td><span class="pill ${t.status==="success"?"pos":"neg"}">${esc(t.status)}</span></td><td class="r"><a href="https://solscan.io/tx/${encodeURIComponent(t.tx)}" target="_blank" rel="noopener">Solscan</a></td></tr>`).join("");
+  if(prevTotal==null)tick();else renderLive();
+}
+function renderFeed(){
+  const acts=D.activity||[];$("actCount").textContent=acts.length?`${Math.min(shown,acts.length)} of ${acts.length}`:"";
+  $("feed").innerHTML=acts.slice(0,shown).map(a=>{const k=a.ts+a.title;const nw=!firstFeed&&!seenAct.has(k);seenAct.add(k);
+    return `<div class="it${nw?" new":""}"><div class="h"><span class="tag ${esc(a.type)}">${esc(TAG[a.type]||a.type)}</span><span class="t">${esc((a.title||"").replace(/->/g,"→"))}</span><span class="tm">${fmtTime(a.ts)}</span></div>
+    ${a.why?`<div class="d"><b>Why:</b> ${esc(a.why)}</div>`:""}${a.expect?`<div class="d"><b>Expect:</b> ${esc(a.expect)}</div>`:""}
+    ${a.tx?`<div class="d"><a href="https://solscan.io/tx/${encodeURIComponent(a.tx)}" target="_blank" rel="noopener">View transaction</a></div>`:""}</div>`}).join("");
+  firstFeed=false;$("moreBtn").hidden=acts.length<=shown;
+}
+$("moreBtn").onclick=()=>{shown+=10;renderFeed()};
+function status(){
+  const fresh=lastBal&&Date.now()-lastBal<30000;$("dot").className="dot"+(fresh?"":" stale");
+  $("liveTxt").textContent=lastBal?`Live · prices ${ago(lastPrice)} · balances ${ago(lastBal)}`:"Connecting…";
+  $("holdAge").textContent=lastBal?"updated "+ago(lastBal):"";
+  $("statusAge").textContent=D?.published_at?"published "+ago(Date.parse(D.published_at)):"";
+  $("pubInfo").textContent=D?.published_at?`Last published ${ago(Date.parse(D.published_at))}, checked ${ago(lastData)}.`:"";
+}
+fetchData();setInterval(fetchData,DATA_MS);setInterval(tick,BAL_MS);setInterval(status,1000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden){fetchData();tick()}});
+</script>
+</body>
+</html>
