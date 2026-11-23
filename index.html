@@ -138,9 +138,10 @@ footer{font-size:12px;color:var(--faint);text-align:center;margin-top:24px;line-
 "use strict";
 const GIST_ID="66ea403f3f83e94518df2eb00b6d7ddb", GIST_USER="5ynwbg9yry-bit";
 const ADDRESS="J4dvbhAdWNVEc7R7P3spD8YWKs3GjZ2fgMrhvB9EPSe8";
-const RPCS=["https://solana-rpc.publicnode.com","https://api.mainnet-beta.solana.com"];
+const RPC_PRIMARY="https://public.rpc.solanavibestation.com";
+const RPC_SOL="https://solana-rpc.publicnode.com";
 const SOL="So11111111111111111111111111111111111111112", USDC="EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
-const TZ="America/Louisville", BAL_MS=8000, DATA_MS=20000;
+const TZ="America/Louisville", BAL_MS=8000, TOKEN_MS=30000, DATA_MS=20000;
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const usd=n=>n==null||!isFinite(n)?"—":"$"+Number(n).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -152,7 +153,7 @@ const ago=ms=>{if(!ms)return "—";const s=Math.max(0,Math.round((Date.now()-ms)
 const fmtTime=ts=>{const d=new Date(ts);return isNaN(d)?esc(ts):d.toLocaleString("en-US",{timeZone:TZ,month:"short",day:"numeric",hour:"numeric",minute:"2-digit"})+" ET"};
 const TAG={scan:"Scan",analysis:"Check",candidate:"Candidate",rejected:"Rejected",proposal:"Proposal",approved:"Approved",trade:"Trade",exit:"Exit",note:"Note",watch:"Watching"};
 
-let D=null, etag=null, lastData=0, lastBal=0, lastPrice=0, apiBlockedUntil=0;
+let D=null, etag=null, lastData=0, lastBal=0, lastTok=0, lastPrice=0, apiBlockedUntil=0, rpcCool={};
 let bal={sol:null,tokens:{}}, prices={}, live=[], prevTotal=null, shown=10, seenAct=new Set(), firstFeed=true;
 try{live=JSON.parse(localStorage.getItem("m1m_live")||"[]").filter(p=>Date.now()/1000-p[0]<86400)}catch(e){}
 
@@ -174,14 +175,50 @@ async function fetchData(){
 }
 
 // ---------- live balances + prices (browser, direct) ----------
-async function rpc(body){for(const u of RPCS){try{const r=await fetch(u,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)});const j=await r.json();if(j.result)return j.result}catch(e){}}return null}
-async function fetchBalances(){
-  const accts=(D&&D.token_accounts)||[];
-  const res=await rpc({jsonrpc:"2.0",id:1,method:"getMultipleAccounts",params:[[ADDRESS,...accts.map(a=>a.pubkey)],{encoding:"jsonParsed",commitment:"confirmed"}]});
+function markCool(url,r){
+  let ms=r&&r.status===429?15000:20000;
+  const ra=r&&r.headers&&r.headers.get("Retry-After");
+  if(ra&&isFinite(+ra))ms=Math.min(Math.max(+ra,1),120)*1000;
+  rpcCool[url]=Date.now()+ms;
+}
+function blockedErr(j,r){
+  const err=j&&j.error, m=String(err&&err.message||"").toLowerCase();
+  return (r&&(r.status===403||r.status===429))||(err&&(err.code===403||err.code===429||m.includes("too many requests")||m.includes("request blocked")||m.includes("access forbidden")||m.includes("personal token")));
+}
+async function rpcAt(url,body){
+  if(Date.now()<(rpcCool[url]||0))return null;
+  try{
+    const r=await fetch(url,{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)});
+    let j=null; try{j=await r.json()}catch(e){}
+    if(blockedErr(j,r)){markCool(url,r);return null}
+    if(!r.ok||!j||j.result==null)return null;
+    return j.result;
+  }catch(e){return null}
+}
+async function rpc(body,solOnly){
+  const urls=solOnly?[RPC_PRIMARY,RPC_SOL]:[RPC_PRIMARY];
+  for(const u of urls){const res=await rpcAt(u,body);if(res!=null)return res}
+  return null;
+}
+function seedTokensFromGist(){
+  if(lastTok)return;
+  const toks={};((D&&D.token_accounts)||[]).forEach(a=>{if(+a.amount>0)toks[a.mint]={symbol:a.symbol,amount:+a.amount}});
+  if(Object.keys(toks).length)bal.tokens=toks;
+}
+async function fetchSol(){
+  const res=await rpc({jsonrpc:"2.0",id:1,method:"getBalance",params:[ADDRESS,{commitment:"confirmed"}]},true);
+  if(!res||res.value==null)return false;
+  bal.sol=res.value/1e9; lastBal=Date.now(); return true;
+}
+async function fetchTokens(){
+  if(!D)return false;
+  const accts=D.token_accounts||[];
+  if(!accts.length){lastTok=Date.now();return true}
+  const res=await rpc({jsonrpc:"2.0",id:1,method:"getMultipleAccounts",params:[accts.map(a=>a.pubkey),{encoding:"jsonParsed",commitment:"confirmed"}]});
   if(!res)return false;
-  const v=res.value; bal.sol=(v[0]?.lamports||0)/1e9; const toks={};
-  accts.forEach((a,i)=>{const info=v[i+1]?.data?.parsed?.info;if(!info)return;const ui=+info.tokenAmount.uiAmountString;if(ui>0)toks[a.mint]={symbol:a.symbol,amount:ui}});
-  bal.tokens=toks;lastBal=Date.now();return true;
+  const toks={};
+  accts.forEach((a,i)=>{const info=res.value[i]?.data?.parsed?.info;if(!info)return;const ui=+info.tokenAmount.uiAmountString;if(ui>0)toks[a.mint]={symbol:a.symbol,amount:ui}});
+  bal.tokens=toks; lastTok=Date.now(); lastBal=Date.now(); return true;
 }
 async function fetchPrices(){
   const mints=[SOL,...Object.keys(bal.tokens)];const ids=[...new Set(mints)].join(",");let ok=false;
@@ -196,9 +233,11 @@ async function fetchPrices(){
   if(ok)lastPrice=Date.now();return ok;
 }
 async function tick(){
-  if(!D)return;
-  await fetchBalances(); await fetchPrices();
-  renderLive();
+  seedTokensFromGist();
+  await fetchSol();
+  if(D&&(!lastTok||Date.now()-lastTok>=TOKEN_MS)) await fetchTokens();
+  await fetchPrices();
+  if(D)renderLive();
 }
 
 // ---------- render ----------
@@ -267,6 +306,7 @@ function renderData(){
   $("planLink").href=D.plan_url;
   renderFeed();
   $("trades").tBodies[0].innerHTML=(D.trades||[]).map(t=>`<tr><td>${esc(t.time.replace(" EST"," ET").replace(/^\d{4}-/,""))}</td><td>${esc(t.in)} → ${esc(t.out)}</td><td><span class="pill ${t.status==="success"?"pos":"neg"}">${esc(t.status)}</span></td><td class="r"><a href="https://solscan.io/tx/${encodeURIComponent(t.tx)}" target="_blank" rel="noopener">Solscan</a></td></tr>`).join("");
+  seedTokensFromGist();
   if(prevTotal==null)tick();else renderLive();
 }
 function renderFeed(){
