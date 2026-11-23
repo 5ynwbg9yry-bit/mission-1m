@@ -28,8 +28,8 @@ h1{font-size:20px;font-weight:600;margin:0;letter-spacing:-.01em}
 .pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:13px;font-weight:500}
 .pos{color:var(--green);background:var(--gbg)}.neg{color:var(--red);background:var(--rbg)}
 .up{color:var(--green)}.dn{color:var(--red)}
-.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:18px}
-@media(max-width:520px){#pos th:nth-child(4),#pos td:nth-child(4),#holds th:nth-child(3),#holds td:nth-child(3){display:none}table{font-size:13px}td,th{padding-left:6px;padding-right:6px}#pos{font-size:12px}#pos td{white-space:nowrap}#pos td,#pos th{padding-left:4px;padding-right:4px}}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-top:18px}
+@media(max-width:520px){#pos th:nth-child(4),#pos td:nth-child(4),#holds th:nth-child(3),#holds td:nth-child(3),#trades th:nth-child(3),#trades td:nth-child(3){display:none}table{font-size:13px}td,th{padding-left:6px;padding-right:6px}#pos{font-size:12px}#pos td{white-space:nowrap}#pos td,#pos th{padding-left:4px;padding-right:4px}}
 @media(max-width:640px){.grid{grid-template-columns:repeat(2,1fr)}.hero .total{font-size:40px}}
 .kv .k{font-size:12px;color:var(--dim)}.kv .v{font-size:17px;font-weight:600;font-variant-numeric:tabular-nums;transition:color .6s}
 .prog{margin-top:20px}
@@ -80,6 +80,7 @@ footer{font-size:12px;color:var(--faint);text-align:center;margin-top:24px;line-
     <div class="grid">
       <div class="kv"><div class="k">Deposited</div><div class="v" id="dep">$11.55</div></div>
       <div class="kv"><div class="k">Open P/L</div><div class="v" id="openPl">—</div></div>
+      <div class="kv"><div class="k">Realized P/L</div><div class="v" id="realPl">—</div><div class="sub">after fees</div></div>
       <div class="kv"><div class="k">Next milestone</div><div class="v" id="nextM">—</div></div>
       <div class="kv"><div class="k">Needed to $1M</div><div class="v" id="need">—</div></div>
     </div>
@@ -124,7 +125,7 @@ footer{font-size:12px;color:var(--faint);text-align:center;margin-top:24px;line-
 
   <section class="card">
     <h2>Recent trades</h2>
-    <div class="scroll"><table id="trades"><thead><tr><th>Time</th><th>Swap</th><th>Status</th><th class="r">Receipt</th></tr></thead><tbody></tbody></table></div>
+    <div class="scroll"><table id="trades"><thead><tr><th>Time</th><th>Swap</th><th class="r">Fees</th><th class="r">P/L</th><th>Status</th><th class="r">Receipt</th></tr></thead><tbody></tbody></table></div>
   </section>
 
   <footer>
@@ -246,6 +247,34 @@ function holdings(){const H=[];
   for(const m in bal.tokens){const t=bal.tokens[m];const p=prices[m]??(D.box_prices||{})[m];H.push({sym:t.symbol,mint:m,amount:t.amount,price:p,usd:p!=null?t.amount*p:null})}
   return H.sort((a,b)=>(b.usd||0)-(a.usd||0))}
 function flash(el,dir){el.classList.remove("flash-up","flash-dn");void el.offsetWidth;if(dir)el.classList.add(dir>0?"flash-up":"flash-dn");setTimeout(()=>el.classList.remove("flash-up","flash-dn"),900)}
+// Status blurbs can include a stale "+10%" copied from an earlier hour.
+// Replace those figures for currently open positions using live prices.
+function refreshStatusPnl(text, liveBySym){
+  if(!text)return text;
+  let out=String(text);
+  Object.keys(liveBySym||{}).forEach(sym=>{
+    const info=liveBySym[sym]; if(!sym||info==null||info.plp==null)return;
+    if(!new RegExp("\\b"+sym.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"\\b","i").test(out))return;
+    const abs=Math.abs(info.plp).toFixed(1)+"%";
+    const signed=(info.plp>=0?"+":"−")+Math.abs(info.plp).toFixed(1)+"%";
+    const dir=info.plp>=0?"up":"down";
+    out=out.replace(new RegExp("("+sym.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"[^.]{0,80}?)\\b(?:up|down)\\s+(?:about|around|roughly|nearly|~)?\\s*\\+?-?\\d+(?:\\.\\d+)?%","ig"),
+      (_,lead)=>lead+dir+" about "+abs);
+    out=out.replace(new RegExp("("+sym.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"[^.]{0,80}?)\\b(?:P\\/?L|P&L|at)\\s*\\+?-?\\d+(?:\\.\\d+)?%","ig"),
+      (_,lead)=>lead+"P/L "+signed);
+    out=out.replace(new RegExp("("+sym.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"[^.]{0,40}?)\\+\\d+(?:\\.\\d+)?%","ig"),
+      (_,lead)=>lead+signed);
+  });
+  return out;
+}
+function applyLiveStatus(liveBySym){
+  if(!D)return;
+  const s=D.status||{}, acts=D.activity||[];
+  const a0=acts.find(a=>["trade","exit","approved","proposal","watch","analysis","candidate"].includes(a.type))||acts[0]||{};
+  $("fNow").textContent=refreshStatusPnl(s.current_focus||a0.title||"—", liveBySym);
+  $("fWhy").textContent=refreshStatusPnl(s.current_why||a0.why||"—", liveBySym);
+  $("fExp").textContent=refreshStatusPnl(s.current_expect||a0.expect||"—", liveBySym);
+}
 function renderLive(){
   const H=holdings();if(!H.length||H.some(h=>h.usd==null&&h.amount>0&&h.sym!=="USDT"))return;
   const total=H.reduce((a,h)=>a+(h.usd||0),0), start=D.start_usd||10;
@@ -259,16 +288,18 @@ function renderLive(){
   // holdings table
   $("holds").tBodies[0].innerHTML=H.filter(h=>h.amount>0).map(h=>`<tr><td>${esc(h.sym)}</td><td class="r">${amt(h.amount)}</td><td class="r">${px(h.price)}</td><td class="r">${usd(h.usd)}</td><td class="r">${total?((h.usd||0)/total*100).toFixed(0):0}%</td></tr>`).join("");
   // positions
-  const P=D.positions||[];let opl=0,has=false;
+  const P=D.positions||[];let opl=0,has=false;const liveBySym={};
   $("posCard").hidden=!P.length;
   $("pos").tBodies[0].innerHTML=P.map(p=>{const now=prices[p.mint]??(D.box_prices||{})[p.mint];const qty=bal.tokens[p.mint]?.amount??p.qty;
     const val=now!=null&&qty!=null?now*qty:null;const cost=p.cost_usd??(p.entry*p.qty);const pl=val!=null&&cost?val-cost:null;if(pl!=null){opl+=pl;has=true}
     const plp=pl!=null?pl/cost*100:null;const dist=p.stop&&now?((now/p.stop-1)*100):null;
+    if(p.symbol&&plp!=null)liveBySym[p.symbol]={plp,pl};
     return `<tr><td><a href="https://dexscreener.com/solana/${encodeURIComponent(p.mint)}" target="_blank" rel="noopener">${esc(p.symbol)}</a>${p.tx?`<div class="sub"><a href="https://solscan.io/tx/${encodeURIComponent(p.tx)}" target="_blank" rel="noopener">entry tx</a></div>`:""}</td>
     <td class="r">${px(p.entry)}</td><td class="r">${px(now)}</td><td class="r">${usd(val)}</td>
     <td class="r ${pl==null?"":pl>=0?"up":"dn"}">${pl==null?"—":sgnUsd(pl)}<div class="sub">${plp==null?"":(plp>=0?"+":"")+plp.toFixed(1)+"%"}</div></td>
     <td class="r">${px(p.stop)}<div class="sub">${dist==null?"":dist.toFixed(1)+"% away"}</div></td></tr>`}).join("");
   const o=$("openPl");o.textContent=has?sgnUsd(opl):"—";o.className="v "+(has?(opl>=0?"up":"dn"):"");
+  applyLiveStatus(liveBySym);
   // live chart points
   const now=Math.floor(Date.now()/1000);if(!live.length||now-live[live.length-1][0]>=15){live.push([now,+total.toFixed(4)]);live=live.slice(-3000);try{localStorage.setItem("m1m_live",JSON.stringify(live))}catch(e){}}
   else live[live.length-1]=[live[live.length-1][0],+total.toFixed(4)];
@@ -302,10 +333,21 @@ function renderData(){
   $("fExp").textContent=s.current_expect||a0.expect||"—";
   $("fNext").textContent=s.next_step||"—";
   $("dep").textContent=usd(D.deposited_usd);
+  const rp=D.realized_pnl_after_fees, rEl=$("realPl");
+  if(rEl){rEl.textContent=rp==null?"—":sgnUsd(rp);rEl.className="v "+(rp==null?"":rp>=0?"up":"dn")}
   $("walletLink").textContent=D.address.slice(0,4)+"…"+D.address.slice(-4);$("walletLink").href="https://solscan.io/account/"+D.address;
   $("planLink").href=D.plan_url;
   renderFeed();
-  $("trades").tBodies[0].innerHTML=(D.trades||[]).map(t=>`<tr><td>${esc(t.time.replace(" EST"," ET").replace(/^\d{4}-/,""))}</td><td>${esc(t.in)} → ${esc(t.out)}</td><td><span class="pill ${t.status==="success"?"pos":"neg"}">${esc(t.status)}</span></td><td class="r"><a href="https://solscan.io/tx/${encodeURIComponent(t.tx)}" target="_blank" rel="noopener">Solscan</a></td></tr>`).join("");
+  $("trades").tBodies[0].innerHTML=(D.trades||[]).map(t=>{
+    const feeParts=[];
+    if(t.network_fee_usd!=null)feeParts.push(usd(t.network_fee_usd)+" net");
+    else if(t.network_fee_sol!=null)feeParts.push(Number(t.network_fee_sol).toFixed(6)+" SOL");
+    if(t.platform_fee_usd!=null)feeParts.push(usd(t.platform_fee_usd)+" plat");
+    const feeTxt=feeParts.length?feeParts.join(" · "):"—";
+    const after=t.pnl_after_costs_usd, gross=t.pnl_usd;
+    const plCell=after==null&&gross==null?"—":`<span class="${(after??gross)>=0?"up":"dn"}">${sgnUsd(after??gross)}</span>${after!=null?'<div class="sub">after fees</div>':""}`;
+    return `<tr><td>${esc(t.time.replace(" EST"," ET").replace(/^\d{4}-/,""))}</td><td>${esc(t.in)} → ${esc(t.out)}</td><td class="r">${feeTxt}</td><td class="r">${plCell}</td><td><span class="pill ${t.status==="success"?"pos":"neg"}">${esc(t.status)}</span></td><td class="r"><a href="https://solscan.io/tx/${encodeURIComponent(t.tx)}" target="_blank" rel="noopener">Solscan</a></td></tr>`;
+  }).join("");
   seedTokensFromGist();
   if(prevTotal==null)tick();else renderLive();
 }
