@@ -64,6 +64,37 @@ svg{display:block;width:100%;height:auto}
 .more{background:none;border:1px solid var(--line);border-radius:8px;padding:7px 12px;color:var(--txt);font:inherit;font-size:13px;cursor:pointer;margin-top:10px}
 footer{font-size:12px;color:var(--faint);text-align:center;margin-top:24px;line-height:1.8}
 .chartmeta{display:flex;justify-content:space-between;font-size:12px;color:var(--faint);margin-top:6px}
+.lead{font-size:14px;color:var(--dim);margin:0 0 14px;line-height:1.55}
+.ladder{display:flex;flex-wrap:wrap;gap:6px}
+.rung{padding:4px 9px;border-radius:999px;border:1px solid var(--line);font-size:12px;color:var(--faint);font-variant-numeric:tabular-nums;line-height:1.3}
+.rung.done{color:var(--txt);background:var(--gbg);border-color:transparent}
+.rung.now{color:var(--accent);border-color:var(--accent);font-weight:600;background:var(--card)}
+.rung.goal{font-weight:600}
+.flow{display:grid;grid-template-columns:1fr 18px 1fr 18px 1fr 18px 1fr;gap:8px;align-items:stretch}
+.flow .arrow{display:flex;align-items:center;justify-content:center;color:var(--faint);font-size:18px;line-height:1}
+.step,.rule{background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:14px}
+.step .n{font-size:11px;color:var(--accent);font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.step h3,.rule h3{margin:4px 0 6px;font-size:15px;font-weight:600}
+.step p{margin:0;font-size:14px;color:var(--dim)}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.rule ul{margin:0;padding:0 0 0 18px;color:var(--dim);font-size:14px}
+.rule li{margin:0 0 5px}
+.rule li:last-child{margin-bottom:0}
+.note{margin:12px 0 0;font-size:13px;color:var(--dim)}
+.sys{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px 14px}
+.sys .v.ok{color:var(--green)}
+.sys .v.wait{color:var(--dim)}
+.sys .v.warn{color:var(--red)}
+.flags{margin-top:16px}
+.flags h3{font-size:13px;font-weight:600;color:var(--dim);margin:0 0 8px;text-transform:uppercase;letter-spacing:.06em}
+.cand{padding:10px 0;border-bottom:1px solid var(--line)}
+.cand:last-child{border-bottom:0}
+.cand .h{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.cand .t{font-weight:600;flex:1;min-width:120px}
+.cand .meta{font-size:12px;color:var(--faint)}
+.cand .d{font-size:14px;color:var(--dim);margin-top:4px}
+@media(max-width:800px){.flow{grid-template-columns:1fr}.flow .arrow{transform:rotate(90deg);height:16px}}
+
 </style>
 </head>
 <body>
@@ -85,9 +116,19 @@ footer{font-size:12px;color:var(--faint);text-align:center;margin-top:24px;line-
       <div class="kv"><div class="k">Needed to $1M</div><div class="v" id="need">—</div></div>
     </div>
     <div class="prog">
-      <div class="ticks" style="margin:0 0 6px"><span>Progress to $1M</span><span><b id="progPct">—</b> (log scale: each 10x is 20%)</span></div>
+      <div class="ticks" style="margin:0 0 6px"><span>Long-range, $10 to $1M</span><span><b id="progPct">—</b> (log scale: each 10x is 20%)</span></div>
       <div class="bar"><i id="progBar"></i></div>
       <div class="ticks"><span>$10</span><span>$100</span><span>$1K</span><span>$10K</span><span>$100K</span><span>$1M</span></div>
+    </div>
+  </section>
+
+
+  <section class="card" id="ladderCard">
+    <h2>The goal ladder <span id="ladderPct"></span></h2>
+    <p class="lead" id="ladderCap">$10 to $1M is about 17 doubles. Each win rolls into the next trade, so the account can keep doubling.</p>
+    <div class="ladder" id="ladder"></div>
+    <div class="prog" style="margin-top:14px">
+      <div class="bar"><i id="ladderBar"></i></div>
     </div>
   </section>
 
@@ -98,6 +139,99 @@ footer{font-size:12px;color:var(--faint);text-align:center;margin-top:24px;line-
       <div class="k">Why</div><div class="v" id="fWhy">—</div>
       <div class="k">What I expect</div><div class="v" id="fExp">—</div>
       <div class="k">Next</div><div class="v" id="fNext">—</div>
+    </div>
+  </section>
+
+
+  <section class="card">
+    <h2>How it works</h2>
+    <p class="lead">Four parts, from finding a coin to selling it. The scanner and the watcher run all the time on the trading box. Buys wait for the hourly run.</p>
+    <div class="flow">
+      <div class="step"><div class="n">1</div><h3>Scanner</h3><p>Always on. It checks the market every minute and only flags coins. It never buys.</p></div>
+      <div class="arrow" aria-hidden="true">→</div>
+      <div class="step"><div class="n">2</div><h3>Safety check</h3><p>Rug check, holder concentration, signs of a bundled launch, a funding check, and a test sell that actually goes through.</p></div>
+      <div class="arrow" aria-hidden="true">→</div>
+      <div class="step"><div class="n">3</div><h3>Entry decision</h3><p>The hourly run reviews flagged coins and buys only when at least two signals line up and every safety gate passes.</p></div>
+      <div class="arrow" aria-hidden="true">→</div>
+      <div class="step"><div class="n">4</div><h3>Watcher</h3><p>Always on. It handles the sells: the hard stop, the 2x and 4x take-profits, the trailing stop, the 25-minute time stop, and an instant exit if the creator sells or liquidity is pulled.</p></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>The rules</h2>
+    <p class="lead">The working rulebook, fitted to a small account. Safety checks do not bend.</p>
+    <div class="rules">
+      <div class="rule">
+        <h3>What it trades</h3>
+        <ul>
+          <li>Solana coins launched or migrated in the last 6 hours, on pump.fun, Raydium, or Meteora</li>
+          <li>At least $25K of liquidity and $10K of trading in the last 5 minutes</li>
+          <li>At least 200 holders</li>
+          <li>The creator can't freeze tokens or mint more</li>
+          <li>Liquidity is burned or locked</li>
+        </ul>
+      </div>
+      <div class="rule">
+        <h3>Buy signals</h3>
+        <ul>
+          <li>Needs at least two of these together</li>
+          <li>5-minute volume more than 3× the hourly average</li>
+          <li>More than 65% of trades are buys</li>
+          <li>Holders up about 10% in 15 minutes</li>
+          <li>The number of separate buyers is rising</li>
+          <li>Never chase a coin already up 300% in the past hour unless it pulls back first</li>
+        </ul>
+      </div>
+      <div class="rule">
+        <h3>Safety gates</h3>
+        <ul>
+          <li>A RugCheck pass</li>
+          <li>The creator holds under 5%</li>
+          <li>The top 10 holders hold under 35%</li>
+          <li>No bundled launch</li>
+          <li>A funding check of the big holders</li>
+          <li>A test sell quote that goes through</li>
+          <li>Fees stay around a cent per trade</li>
+        </ul>
+      </div>
+      <div class="rule">
+        <h3>Sizing</h3>
+        <ul>
+          <li>About 25% of the account per trade, so the bet grows as the account grows</li>
+          <li>At most 2 positions open at a time</li>
+          <li>After two losses in a row, cut the size in half until a win</li>
+          <li>If the account falls 30% below its high, pause and rethink</li>
+          <li>Profits roll into the next trade</li>
+        </ul>
+      </div>
+      <div class="rule">
+        <h3>Exits</h3>
+        <ul>
+          <li>Sell everything at −12%</li>
+          <li>Sell 40% at 2×, and 30% at 4×</li>
+          <li>Let the last 30% run with a stop that follows 25% below the price</li>
+          <li>Get out after 25 minutes if the trade isn't up at least 10%</li>
+          <li>Sell right away if the creator sells or the liquidity gets pulled</li>
+        </ul>
+      </div>
+    </div>
+    <p class="note">Not used: leveraged futures. A wipe on a small account isn't worth it.</p>
+  </section>
+
+  <section class="card">
+    <h2>Live system <span id="sysAge"></span></h2>
+    <div class="sys">
+      <div class="kv"><div class="k">Scanner</div><div class="v" id="sysScan">—</div><div class="sub" id="sysScanSub"></div></div>
+      <div class="kv"><div class="k">Watcher</div><div class="v" id="sysWatch">—</div><div class="sub" id="sysWatchSub"></div></div>
+      <div class="kv"><div class="k">Last hourly run</div><div class="v" id="sysRun">—</div><div class="sub" id="sysRunSub"></div></div>
+      <div class="kv"><div class="k">Open positions</div><div class="v" id="sysPos">—</div></div>
+      <div class="kv"><div class="k">Size per trade</div><div class="v" id="sysSize">—</div><div class="sub" id="sysSizeSub"></div></div>
+      <div class="kv"><div class="k">Losing streak</div><div class="v" id="sysStreak">—</div><div class="sub" id="sysStreakSub"></div></div>
+      <div class="kv"><div class="k">Drawdown from peak</div><div class="v" id="sysDd">—</div><div class="sub" id="sysDdSub"></div></div>
+    </div>
+    <div class="flags">
+      <h3>Flagged by the scanner</h3>
+      <div id="flags">The scanner is starting up. Flags will show up here.</div>
     </div>
   </section>
 
@@ -241,6 +375,169 @@ async function tick(){
   if(D)renderLive();
 }
 
+
+const DOUBLES=Array.from({length:18},(_,i)=>10*2**i);
+function fmtRung(n){
+  if(n>=1e6) return "$"+(n/1e6).toFixed(2).replace(/0+$/,"").replace(/\.$/,"")+"M";
+  if(n>=1000){
+    const x=n/1000, d=x>=100?0:x>=10?1:2;
+    return "$"+Number(x.toFixed(d))+"K";
+  }
+  return "$"+Math.round(n);
+}
+function money(n){
+  if(n==null||!isFinite(+n))return "—";
+  n=+n;
+  if(Math.abs(n)>=1e6) return "$"+(n/1e6).toFixed(Math.abs(n)>=1e7?0:1).replace(/\.0$/,"")+"M";
+  if(Math.abs(n)>=1e3) return "$"+(n/1e3).toFixed(Math.abs(n)>=1e4?0:1).replace(/\.0$/,"")+"K";
+  return usd(n);
+}
+function parseTs(v){
+  if(v==null||v==="")return null;
+  if(typeof v==="number") return v>1e12?v:v*1000;
+  const d=Date.parse(v);
+  return isNaN(d)?null:d;
+}
+function rungWindow(total){
+  let i=0;
+  while(i<DOUBLES.length-1 && total>=DOUBLES[i+1]) i++;
+  return {i, lo:DOUBLES[i], hi:DOUBLES[Math.min(i+1, DOUBLES.length-1)], last:i>=DOUBLES.length-1};
+}
+function renderLadder(total){
+  if(total==null||!isFinite(total)) return;
+  const {i,lo,hi,last}=rungWindow(total);
+  $("ladder").innerHTML=DOUBLES.map((n,idx)=>{
+    let cls="rung";
+    if(idx<i) cls+=" done";
+    else if(idx===i) cls+=" now";
+    if(n>=1e6) cls+=" goal";
+    return `<span class="${cls}">${fmtRung(n)}</span>`;
+  }).join("");
+  if(last){
+    $("ladderCap").textContent="Past the last double ("+fmtRung(lo)+"), which is past the $1M goal.";
+    $("ladderPct").textContent="Done";
+    $("ladderBar").style.width="100%";
+  }else{
+    const pct=Math.max(0,Math.min(100,(total-lo)/(hi-lo)*100));
+    $("ladderCap").textContent=`Double ${i+1} of 17: ${fmtRung(lo)} → ${fmtRung(hi)}. About ${usd(Math.max(0,hi-total))} to go.`;
+    $("ladderPct").textContent=pct.toFixed(1)+"% of the way";
+    $("ladderBar").style.width=Math.max(.6,pct)+"%";
+  }
+}
+function setKV(id, text, cls, sub, subText){
+  const el=$(id); if(!el) return;
+  el.textContent=text;
+  el.className="v"+(cls?" "+cls:"");
+  const s=$(sub); if(s) s.textContent=subText||"";
+}
+function renderSystem(total){
+  const sys=(D&&D.system)||{};
+  const sc=sys.scanner||{};
+  const w=sys.watcher||{};
+  const present=!!(sc.present||sc.running||sc.updated||(sc.candidates&&sc.candidates.length)||sc.cycle);
+  const scanTs=parseTs(sc.updated);
+  const scanState=sc.status||(present?"running":"starting");
+  const flagged=(sc.counts&&sc.counts.flagged!=null)?sc.counts.flagged:(sc.candidates||[]).length;
+  if(!D){
+    setKV("sysScan","—","","sysScanSub","");
+  }else if(!present || scanState==="starting"){
+    setKV("sysScan","Starting up","wait","sysScanSub","Flags will show up here once the scanner is on.");
+  }else if(scanState==="running"){
+    const subParts=[];
+    if(scanTs) subParts.push("checked "+ago(scanTs));
+    if(sc.counts){
+      if(sc.counts.pools_seen!=null) subParts.push(sc.counts.pools_seen+" pools");
+      if(sc.counts.in_universe!=null) subParts.push(sc.counts.in_universe+" in range");
+    }
+    setKV("sysScan", sc.running===false?"On, last cycle on file":"Running","ok","sysScanSub",
+      (subParts.join(" · ")+(flagged?` · ${flagged} flagged`:" · none flagged")));
+  }else if(scanState==="stale"){
+    setKV("sysScan","Last check went quiet","wait","sysScanSub",scanTs?("checked "+ago(scanTs)):"");
+  }else{
+    setKV("sysScan", scanState, "wait","sysScanSub",scanTs?("checked "+ago(scanTs)):"");
+  }
+
+  const nOpen=(D&&D.positions)?D.positions.length:0;
+  const watchTs=parseTs(w.updated);
+  if(!D){
+    setKV("sysWatch","—","","sysWatchSub","");
+  }else if(w.running || w.status==="running"){
+    setKV("sysWatch","Running","ok","sysWatchSub",watchTs?("checked "+ago(watchTs)):"Always on, handles the exits.");
+  }else if(nOpen>0){
+    setKV("sysWatch","Not running","warn","sysWatchSub","There is an open position and the exit watcher is off.");
+  }else{
+    setKV("sysWatch","Idle","wait","sysWatchSub","No open positions. It starts watching once a trade is on.");
+  }
+
+  const runTs=parseTs(sys.last_run_at||(D&&D.status&&D.status.updated));
+  if(!D){
+    setKV("sysRun","—","","sysRunSub","");
+  }else if(runTs){
+    setKV("sysRun", ago(runTs),"","sysRunSub", fmtTime(runTs));
+  }else{
+    setKV("sysRun","Waiting","wait","sysRunSub","No hourly run on file yet.");
+  }
+
+  $("sysPos").textContent=D?`${nOpen} / ${sys.max_positions||2}`:"—";
+  $("sysPos").className="v";
+
+  const mode=sys.size_mode||((sys.losing_streak||0)>=2?"half":"full");
+  const pct=sys.size_pct!=(null)?sys.size_pct:(mode==="half"?12.5:25);
+  if(total!=null&&isFinite(total)){
+    $("sysSize").textContent=usd(total*pct/100);
+    $("sysSize").className="v";
+    $("sysSizeSub").textContent=(mode==="half"?"Half size · ":"")+pct+"% of live equity";
+  }else if(D){
+    $("sysSize").textContent=pct+"%";
+    $("sysSize").className="v";
+    $("sysSizeSub").textContent=mode==="half"?"Half size until a win":"of live equity";
+  }
+
+  const streak=sys.losing_streak;
+  if(D){
+    if(!streak){
+      setKV("sysStreak","None","ok","sysStreakSub","Full size, 25% of equity.");
+    }else{
+      setKV("sysStreak", streak+" in a row", streak>=2?"wait":"","sysStreakSub",
+        streak>=2?"Half size until a win.":"One more loss would cut size in half.");
+    }
+  }
+
+  const peak=Math.max(sys.peak_usd||0, D&&D.deposited_usd||0, total||0);
+  if(total!=null&&isFinite(total)&&peak>0){
+    const dd=Math.max(0,(peak-total)/peak*100);
+    $("sysDd").textContent=dd<0.05?"At peak":dd.toFixed(1)+"%";
+    $("sysDd").className="v"+(dd>=30?" warn":"");
+    $("sysDdSub").textContent=dd>=30?("Pause line is 30% below "+usd(peak)+"."):("Peak "+usd(peak)+". Pause at 30%.");
+  }
+
+  // flagged coins
+  const box=$("flags");
+  const list=sc.candidates||[];
+  if(!D){
+    box.textContent="Connecting…";
+  }else if(!present || scanState==="starting"){
+    box.textContent="The scanner is starting up. Flags will show up here.";
+  }else if(!list.length){
+    box.textContent="No coins flagged right now. The scanner only flags; it never buys.";
+  }else{
+    box.innerHTML=list.map(c=>{
+      const bits=[];
+      if(c.liquidity!=null) bits.push(money(c.liquidity)+" liquidity");
+      if(c.volume_5m!=null) bits.push(money(c.volume_5m)+" in 5m");
+      if(c.holders!=null) bits.push(Number(c.holders).toLocaleString()+" holders");
+      if(c.age_hours!=null){
+        const h=+c.age_hours;
+        bits.push(h<1?Math.round(h*60)+"m old":h.toFixed(1).replace(/\\.0$/,"")+"h old");
+      }
+      if(c.n_signals!=null) bits.push(c.n_signals+" signals");
+      const name=c.mint?`<a href="https://dexscreener.com/solana/${encodeURIComponent(c.mint)}" target="_blank" rel="noopener">${esc(c.symbol||"unknown")}</a>`:esc(c.symbol||"unknown");
+      const reasons=(c.reasons||[]).map(r=>esc(r)).join(" · ");
+      return `<div class="cand"><div class="h"><span class="t">${name}</span>${bits.length?`<span class="meta">${esc(bits.join(" · "))}</span>`:""}</div>${reasons?`<div class="d">${reasons}</div>`:""}</div>`;
+    }).join("");
+  }
+}
+
 // ---------- render ----------
 function holdings(){const H=[];
   if(bal.sol!=null)H.push({sym:"SOL",mint:SOL,amount:bal.sol,price:prices[SOL],usd:prices[SOL]!=null?bal.sol*prices[SOL]:null});
@@ -283,8 +580,11 @@ function renderLive(){
   $("chgPill").textContent=(pct>=0?"+":"")+pct.toFixed(2)+"%";$("chgPill").className="pill "+(pct>=0?"pos":"neg");
   $("chgTxt").textContent=sgnUsd(ch)+" since the $10 start";
   const lg=Math.max(0,Math.log10(total/10)/5*100);$("progPct").textContent=lg.toFixed(2)+"%";$("progBar").style.width=Math.max(.6,lg)+"%";
-  $("nextM").textContent=short([100,1e3,1e4,1e5,1e6].find(m=>m>total)||1e6);
+  const rw=rungWindow(total);
+  $("nextM").textContent=rw.last?"Past $1M":fmtRung(rw.hi);
   $("need").textContent=Math.round(1e6/total).toLocaleString()+"x";
+  renderLadder(total);
+  renderSystem(total);
   // holdings table
   $("holds").tBodies[0].innerHTML=H.filter(h=>h.amount>0).map(h=>`<tr><td>${esc(h.sym)}</td><td class="r">${amt(h.amount)}</td><td class="r">${px(h.price)}</td><td class="r">${usd(h.usd)}</td><td class="r">${total?((h.usd||0)/total*100).toFixed(0):0}%</td></tr>`).join("");
   // positions
@@ -348,6 +648,7 @@ function renderData(){
     const plCell=after==null&&gross==null?"—":`<span class="${(after??gross)>=0?"up":"dn"}">${sgnUsd(after??gross)}</span>${after!=null?'<div class="sub">after fees</div>':""}`;
     return `<tr><td>${esc(t.time.replace(" EST"," ET").replace(/^\d{4}-/,""))}</td><td>${esc(t.in)} → ${esc(t.out)}</td><td class="r">${feeTxt}</td><td class="r">${plCell}</td><td><span class="pill ${t.status==="success"?"pos":"neg"}">${esc(t.status)}</span></td><td class="r"><a href="https://solscan.io/tx/${encodeURIComponent(t.tx)}" target="_blank" rel="noopener">Solscan</a></td></tr>`;
   }).join("");
+  renderSystem(prevTotal);
   seedTokensFromGist();
   if(prevTotal==null)tick();else renderLive();
 }
@@ -366,6 +667,8 @@ function status(){
   $("holdAge").textContent=lastBal?"updated "+ago(lastBal):"";
   $("statusAge").textContent=D?.published_at?"published "+ago(Date.parse(D.published_at)):"";
   $("pubInfo").textContent=D?.published_at?`Last published ${ago(Date.parse(D.published_at))}, checked ${ago(lastData)}.`:"";
+  if($("sysAge")) $("sysAge").textContent=D?.published_at?"published "+ago(Date.parse(D.published_at)):"";
+  if(D&&$("sysScan")) renderSystem(prevTotal);
 }
 fetchData();setInterval(fetchData,DATA_MS);setInterval(tick,BAL_MS);setInterval(status,1000);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden){fetchData();tick()}});
